@@ -39,8 +39,17 @@ and this plugin bypasses that gate on purpose:
 
 ## Install
 
+From a local checkout:
+
 ```sh
 dsh plugin --profile web add /path/to/dsh-in-convo-mode-change
+```
+
+Or straight from GitHub (the `dsh.bundle.patch` manifest field makes the
+dependency join the profile's plugin layers automatically):
+
+```sh
+dsh plugin --profile web add github:jiangr100/dsh-in-convo-mode-change
 ```
 
 Then **restart the web server** (stop the `dsh web` process and run `dsh web`
