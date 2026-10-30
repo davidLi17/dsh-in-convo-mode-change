@@ -98,6 +98,7 @@ function makeFakeCtx() {
       },
     },
   };
+  remote.agentPresets = { list: async () => (await api.agentPresets.list()).result };
   const ctx = {
     get(name) {
       if (name === "slots") return slots;
@@ -118,6 +119,7 @@ function makeFakeCtx() {
 
 // ---------- run the bundle ----------
 const source = readFileSync(new URL("../lib/client.js", import.meta.url), "utf8");
+let fetchCalls = 0;
 const sandbox = {
   window: fakeWindow,
   document: fakeDocument,
@@ -126,6 +128,7 @@ const sandbox = {
   setTimeout,
   clearTimeout,
   fetch: async () => {
+    fetchCalls++;
     throw new Error("fetch should not be called in this smoke test");
   },
   Node: class Node {},
@@ -136,13 +139,18 @@ vm.runInContext(source, sandbox, { filename: "client.js" });
 check("bundle registered with the loader", loaderRecord !== undefined && loaderRecord.id === "dsh-in-convo-mode-change");
 
 const moduleExports = loaderRecord.factory((specifier) => {
-  if (specifier === "react") return {};
+  if (specifier === "react") return {
+    useState: state => [state, () => {}],
+    useRef: () => ({ current: null }),
+    useEffect() {},
+    createElement: (type, props, ...children) => ({ type, props: props ?? {}, children }),
+  };
   throw new Error(`unexpected require("${specifier}")`);
 });
 check("exports.apply is a function", typeof moduleExports.apply === "function");
 check(
   "exports.inject declares the services",
-  JSON.stringify(moduleExports.inject) === JSON.stringify(["slots", "connection", "remote", "sessions"])
+  JSON.stringify(moduleExports.inject) === JSON.stringify(["slots", "remote", "remote.agentPresets"])
 );
 
 // ---------- apply() wiring ----------
@@ -159,15 +167,40 @@ check("shadows at a priority below the built-in's 0", calls.registerOptions !== 
 check("keeps the label's order", calls.registerOptions !== undefined && calls.registerOptions.order === -10);
 check("renders a component", typeof calls.registerComponent === "function");
 
-check("remote event subscribed", calls.remoteEvent === "agent-preset/selected");
-calls.remoteHandler("session-1", "minimal");
-check(
-  "remote selection updates the sessions store",
-  calls.noteAgentPreset.length === 1 && calls.noteAgentPreset[0][0] === "session-1" && calls.noteAgentPreset[0][1] === "minimal"
-);
-
+check("no obsolete selection-event subscription", calls.remoteEvent === undefined);
 cleanup();
-check("cleanup disposes slot registration", calls.disposers.length === 2);
+check("cleanup disposes slot registration", calls.disposers.length === 1);
+
+// Exercise confirmation after the session starts running while its menu is open.
+function findNode(node, className) {
+  if (!node || typeof node !== 'object') return;
+  if (node.props?.className === className) return node;
+  for (const child of (node.children ?? []).flat(Infinity)) {
+    const found = findNode(child, className);
+    if (found) return found;
+  }
+}
+let running = false;
+const props = { sessionId: 's1', useSessions: pick => pick({ byId: { s1: { projectionValues: { agentPreset: 'standard' }, running } } }) };
+const render = () => calls.registerComponent(props);
+findNode(render(), 'dcm-trigger').props.onClick();
+await new Promise(resolve => setImmediate(resolve));
+findNode(render(), 'dcm-row').props.onClick(); // standard closes; pick another below
+findNode(render(), 'dcm-trigger').props.onClick();
+await new Promise(resolve => setImmediate(resolve));
+function findOption(node, id) {
+  if (!node || typeof node !== 'object') return;
+  if (node.props?.key === id) return node;
+  for (const child of (node.children ?? []).flat(Infinity)) { const found = findOption(child, id); if (found) return found; }
+}
+findOption(render(), 'minimal').props.onClick();
+running = true;
+const confirm = findNode(render(), 'dcm-btn dcm-btnPrimary');
+check('confirmation disabled when turn starts', confirm.props.disabled === true);
+confirm.props.onClick();
+check('running confirmation did not submit', fetchCalls === 0);
+running = false;
+check('confirmation available after stop', findNode(render(), 'dcm-btn dcm-btnPrimary').props.disabled === false);
 
 // ---------- summary ----------
 if (failures > 0) {

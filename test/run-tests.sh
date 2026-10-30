@@ -1,20 +1,18 @@
 #!/usr/bin/env bash
-# Run the plugin's unit/smoke tests. The host test imports
-# @deepseek-ai/dsh-agent-presets, which resolves only against the installed
-# harness scope — a temporary symlink supplies it for the test run.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-
-SCOPE=/home/jiangrui/.nvm/versions/node/v24.16.0/lib/node_modules/@deepseek-ai/dsh/node_modules/@deepseek-ai
-if [ ! -d "$SCOPE" ]; then
-  echo "harness scope not found at $SCOPE — point SCOPE in test/run-tests.sh at your dsh install" >&2
-  exit 1
+# Use existing test dependencies, or explicitly point to a DSH rc.5 installation.
+# Never remove a caller's node_modules directory.
+if [ ! -e node_modules ]; then
+  if [ -z "${DSH_NODE_MODULES:-}" ] || [ ! -d "$DSH_NODE_MODULES" ]; then
+    echo 'Set DSH_NODE_MODULES to rc.5 node_modules (see README.md).' >&2
+    exit 1
+  fi
+  ln -s "$DSH_NODE_MODULES" node_modules
+  trap 'rm node_modules' EXIT
 fi
-
-mkdir -p node_modules
-ln -sfn "$SCOPE" node_modules/@deepseek-ai
-trap 'rm -rf node_modules' EXIT
-
 node test/host.test.mjs
+node test/queue.test.mjs
 node test/slots.test.mjs
 node test/client.test.mjs
+if [ -f test/rc5.test.mjs ]; then node test/rc5.test.mjs; fi

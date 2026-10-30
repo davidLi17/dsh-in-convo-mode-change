@@ -1,9 +1,9 @@
 // Unit tests for the host half (lib/index.js) with a fully mocked ctx.
 // Run from the plugin directory: node test/host.test.mjs
-// (requires a local node_modules symlink so "@deepseek-ai/dsh-agent-presets"
+// (requires a local node_modules symlink so "@deepseek-ai/dsh-typert-protocol"
 // resolves — see the test runner's setup notes).
 
-import { UnknownPresetError, PresetMountError } from "@deepseek-ai/dsh-agent-presets";
+import { RemoteError } from "@deepseek-ai/dsh-typert-protocol";
 import { apply, inject, name } from "../lib/index.js";
 
 let failures = 0;
@@ -212,7 +212,7 @@ check("plugin injects host services", inject.join(",") === "webServer,agentPrese
 {
   {
     const presets = new FakePresets();
-    presets.failWith = new UnknownPresetError("nope", ["standard", "minimal"]);
+    presets.failWith = new RemoteError("agent-preset/not-found", "Unknown preset: nope", { available: ["standard", "minimal"] });
     const session = makeSession([{ type: "turn/start" }, { type: "turn/end" }]);
     const ctx = makeCtx({ session, presets, agent: { session, ctx: {} } });
     apply(ctx);
@@ -222,7 +222,7 @@ check("plugin injects host services", inject.join(",") === "webServer,agentPrese
   }
   {
     const presets = new FakePresets();
-    presets.failWith = new PresetMountError("broken", "the composition is not valid YAML");
+    presets.failWith = new RemoteError("agent-preset/invalid", "the composition is not valid YAML", { agentPreset: "broken" });
     const session = makeSession([{ type: "turn/start" }, { type: "turn/end" }]);
     const ctx = makeCtx({ session, presets, agent: { session, ctx: {} } });
     apply(ctx);

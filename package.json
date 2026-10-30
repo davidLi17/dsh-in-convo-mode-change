@@ -1,6 +1,6 @@
 {
   "name": "dsh-in-convo-mode-change",
-  "version": "1.0.0",
+  "version": "26.10.31-lhg",
   "description": "Switch the agent preset (conversation mode: Standard / Code / Minimal / Creator) of a session mid-conversation, straight from the session header.",
   "type": "module",
   "main": "lib/index.js",
@@ -13,7 +13,8 @@
     "lib",
     "cordis.patch.yml",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "MAINTENANCE.md"
   ],
   "dsh": {
     "bundle": {
@@ -47,6 +48,9 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jiangr100/dsh-in-convo-mode-change.git"
+    "url": "git+https://github.com/davidLi17/dsh-in-convo-mode-change.git"
+  },
+  "scripts": {
+    "test": "bash test/run-tests.sh"
   }
 }
