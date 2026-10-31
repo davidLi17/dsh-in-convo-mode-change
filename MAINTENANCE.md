@@ -1,5 +1,32 @@
 # Maintenance record
 
+## 26.10.31-lhg.2 (Asia/Shanghai 2026-10-31)
+
+Local UI fix on top of b56049d103e2cc21ba96b01f98520eb7447f4e83; upstream remains
+238fa0899ec80194c13d64eaf245a168e5182f82. MIT and original author retained.
+
+The old 320px absolute menu was right-aligned inside the header. At left-side
+anchors it extended outside the viewport and could be clipped/covered by sibling
+conversation content. Render the menu into document.body using the host-provided
+React DOM (rc.5 exposes react-dom in its module loader), with fixed positioning
+and viewport clamping. Reposition on resize, captured scroll and panel/anchor size
+changes. Portal-aware outside-click handling retains confirmation interactions.
+No host switching, running guards, queue logic, permissions or official DSH code
+changed. React DOM is an optional host peer, not bundled.
+
+Verification: 70 existing host, queue, SlotCore, client and real rc.5 registry
+checks pass. JavaScript is hand-written release code; no build transformation.
+8 focused React DOM assertions with explicit geometry pass: body portal,
+viewport clamping, resize/scroll anchoring, internal clicks, and close/unmount
+resource cleanup. Existing switching tests are reused rather than duplicated.
+The original client fails this portal regression (red/green). These are DOM
+tests, not visual tests.
+Official rc.5 isolated Web-profile local tarball installation passes. Shipped
+files are checked against the package. A temporary Chromium fixture could not run in this execution environment; the existing cloud browser
+could not reach the local fixture server. No Windows desktop or real-account UI
+visual acceptance is claimed. No browser/security policy was weakened.
+
+
 ## 26.10.31-lhg (Asia/Shanghai 2026-10-31)
 
 Upstream: https://github.com/jiangr100/dsh-in-convo-mode-change

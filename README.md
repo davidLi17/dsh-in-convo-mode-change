@@ -37,7 +37,10 @@ and this plugin bypasses that gate on purpose:
   through the session's current preset.
 - Don't switch while a turn is running — the menu is disabled during a run.
 
-## 自用修复版：26.10.31-lhg（DSH 0.2.1-rc.5）
+## 自用修复版：26.10.31-lhg.2（DSH 0.2.1-rc.5）
+
+- 修复模式菜单被正文覆盖、靠左时菜单越出窗口的问题：使用宿主 React DOM 的 body portal，并在窗口缩放和滚动时保持菜单位于视口内。
+- 保留菜单内点击、取消、外部点击与 Escape 关闭，以及运行中禁止确认。
 
 - 修复切换结束后每会话 Promise 队列未清理的问题；保留同会话串行切换。
 - 适配 rc.5 的预设错误码、远程接口和会话投影，去掉旧接口及旧包导入。
@@ -106,3 +109,9 @@ Tests require the official rc.5 packages `@deepseek-ai/dsh-agent-preset-registry
 isolated test directory, then run `DSH_NODE_MODULES=/absolute/path/node_modules npm test`.
 The runner never deletes an existing dependency directory. No build step is required;
 `lib/` contains the shipped JavaScript. No live model or account is used in tests.
+
+### UI regression
+
+`UI_NODE_MODULES=/absolute/path/node_modules npm run test:dom` uses React 18.3.1,
+React DOM 18.3.1 and jsdom 26.1.0 for the small portal/positioning regression.
+These are isolated test dependencies, not shipped or bundled runtime libraries.

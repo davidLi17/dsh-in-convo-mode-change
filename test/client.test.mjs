@@ -143,8 +143,10 @@ const moduleExports = loaderRecord.factory((specifier) => {
     useState: state => [state, () => {}],
     useRef: () => ({ current: null }),
     useEffect() {},
+    useLayoutEffect() {},
     createElement: (type, props, ...children) => ({ type, props: props ?? {}, children }),
   };
+  if (specifier === 'react-dom') return { createPortal: child => child };
   throw new Error(`unexpected require("${specifier}")`);
 });
 check("exports.apply is a function", typeof moduleExports.apply === "function");
