@@ -1,5 +1,34 @@
 # Maintenance record
 
+## 26.11.10-lhg (2026-11-10 UTC)
+
+- Fork base: `0e7c92fe689c2f45b589a2ef365c19119ab465b7`.
+  Upstream remains `jiangr100/dsh-in-convo-mode-change@238fa0899ec80194c13d64eaf245a168e5182f82`.
+  Original MIT license and authorship retained; no upstream code update to merge.
+- Official host source: [dsh-v0.2.2-rc.1](https://github.com/deepseek-ai/deepseek-harness/tree/dsh-v0.2.2-rc.1),
+  commit `66491b05e3f05ad35bcdd4f6cd7ed26041d9e3db`.
+  `packages/core/agent/src/index.ts` owns `turnBoundaryOf`; the official
+  `packages/plan/plan-mode/src/index.ts` checks `openTurnStartSeq !== null`.
+- Replace removed `session.events` usage with the host-owned boundary. Real npm
+  rc.5 lacks that method and also lacks the old events field, so fallback uses its
+  public `snapshotEvents()` instead. Preserve event-array support for older hosts.
+  Unknown state, malformed state and state read exceptions fail closed.
+- Tests now use real Session and AgentRegistry rather than an events-shaped fake.
+  Preset fixtures adapt to rc.1's executor-based PTC while rc.5 uses presentAs.
+  They verify stopped-switch, running refusal, untouched history, real registry
+  errors and the next-turn run_code tool view, with no paid model call.
+- Both rc.1 and rc.5: 37 host + 8 queue + 6 SlotCore + 15 client + 14 real host +
+  8 React DOM = 88 checks. Mode-switch behavior and queue cleanup remain intact.
+- Syntax, whitespace, package contents/import and official rc.1 CLI isolated Web
+  profile local-tarball installation/config composition verified. No compilation
+  step or GitHub Actions workflow exists. No package uploaded or npm published.
+- Visual limitation: sandbox-enabled Chromium cannot create a local socket in
+  this environment (Operation not permitted), including the authorized elevated
+  execution attempt. Browser sandbox was not disabled. DOM geometry regression
+  is not a user-desktop visual acceptance claim. Cross-client recompose/start
+  race limitation remains as documented below.
+
+
 ## 26.10.31-lhg.2 (Asia/Shanghai 2026-10-31)
 
 Local UI fix on top of b56049d103e2cc21ba96b01f98520eb7447f4e83; upstream remains
@@ -69,3 +98,4 @@ Limits:
 - As upstream, switching is not an atomic lock against a new turn started from
   another client during asynchronous recomposition. Avoid simultaneous control.
 - This is tested for rc.5; no claim of compatibility with older DSH releases.
+

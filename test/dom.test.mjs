@@ -3,7 +3,7 @@ import { createRequire } from 'node:module';
 import { readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import assert from 'node:assert/strict';
-const require = createRequire(process.env.UI_NODE_MODULES + '/package.json');
+const require = createRequire((process.env.UI_NODE_MODULES || new URL('../node_modules', import.meta.url).pathname) + '/package.json');
 const { JSDOM } = require('jsdom');
 const dom = new JSDOM('<html><head></head><body><header style="overflow:hidden;transform:translateZ(0);z-index:0"><div id="mount"></div></header><main>chat</main></body></html>',{runScripts:'outside-only',url:'http://localhost/'});
 const w=dom.window;
@@ -51,3 +51,4 @@ await click('.dcm-trigger');await act(()=>{root.unmount();cleanup()});
 check(!q('.dcm-panel')&&[...subscriptions.values()].every(n=>n===0)&&observers===0,'unmount cleans portal and positioning resources');
 console.log(`${count} focused React DOM assertions passed (mock geometry; no browser visual claim)`);
 w.close();
+

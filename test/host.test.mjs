@@ -109,6 +109,39 @@ async function callHandler(route, req, res) {
 check("plugin name", name === "dsh-in-convo-mode-change");
 check("plugin injects host services", inject.join(",") === "webServer,agentPresets,agents");
 
+// The host-owned projection is authoritative, including sequence zero.
+for (const [boundary, expected] of [[{openTurnStartSeq: 0},409],[{openTurnStartSeq: 7},409],[{openTurnStartSeq: null},200],[undefined,409]]) {
+  const session = makeSession([]);
+  Object.defineProperty(session, 'events', { get() { throw new Error('must not read removed events API'); } });
+  const ctx = makeCtx({session, agent:{session, ctx:{}}});
+  ctx.agents.turnBoundaryOf = (value) => {
+    if (value !== session) throw new Error('wrong projection target');
+    return boundary;
+  };
+  apply(ctx);
+  const out = await callHandler(ctx.webServer.registered, makeReq('POST',JSON.stringify({sessionId:'s1',agentPreset:'code'})),makeRes());
+  check(`host boundary ${JSON.stringify(boundary)} returns ${expected}`, out.status === expected);
+}
+{
+  const session = makeSession(undefined);
+  const ctx = makeCtx({session,agent:{session,ctx:{}}});apply(ctx);
+  const out=await callHandler(ctx.webServer.registered,makeReq('POST',JSON.stringify({sessionId:'s1',agentPreset:'code'})),makeRes());
+  check('unknown legacy state fails closed',out.status===409);
+}
+
+for (const events of [[], [{type:'turn/start'}], [{type:'turn/start'},{type:'turn/end'}]]) {
+  const session=makeSession(undefined);session.snapshotEvents=()=>events;
+  const ctx=makeCtx({session,agent:{session,ctx:{}}});apply(ctx);
+  const out=await callHandler(ctx.webServer.registered,makeReq('POST',JSON.stringify({sessionId:'s1',agentPreset:'code'})),makeRes());
+  check(`snapshot history length ${events.length} guards correctly`,out.status===(events.length===1?409:200));
+}
+for (const method of ['turnBoundaryOf','snapshotEvents']) {
+  const session=makeSession([]);const ctx=makeCtx({session,agent:{session,ctx:{}}});
+  (method==='turnBoundaryOf'?ctx.agents:session)[method]=()=>{throw new Error('state unavailable')};apply(ctx);
+  const out=await callHandler(ctx.webServer.registered,makeReq('POST',JSON.stringify({sessionId:'s1',agentPreset:'code'})),makeRes());
+  check(`${method} failure refuses mutation`,out.status===409&&ctx.agentPresets.recomposed.length===0);
+}
+
 // ---------- registration ----------
 {
   const ctx = makeCtx({ session: makeSession([]) });
@@ -283,3 +316,4 @@ if (failures > 0) {
   process.exit(1);
 }
 console.log("\nall host tests passed");
+

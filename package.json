@@ -1,6 +1,6 @@
 {
   "name": "dsh-in-convo-mode-change",
-  "version": "26.10.31-lhg.2",
+  "version": "26.11.10-lhg",
   "description": "Switch the agent preset (conversation mode: Standard / Code / Minimal / Creator) of a session mid-conversation, straight from the session header.",
   "type": "module",
   "main": "lib/index.js",
@@ -29,6 +29,12 @@
         "@deepseek-ai/dsh-client-ui-agent-preset"
       ],
       "platform": "web"
+    },
+    "compatibility": {
+      "dshReleases": {
+        "0.2.1-rc.5": "compatible",
+        "0.2.2-rc.1": "compatible"
+      }
     }
   },
   "peerDependencies": {
@@ -56,6 +62,7 @@
   },
   "scripts": {
     "test": "bash test/run-tests.sh",
-    "test:dom": "node test/dom.test.mjs"
+    "test:dom": "node test/dom.test.mjs",
+    "check": "npm test && npm run test:dom"
   }
 }
