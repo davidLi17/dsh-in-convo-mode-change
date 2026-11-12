@@ -10,18 +10,19 @@ composition is fixed when it starts, and the built-in picker only exists on
 the new-session hero screen. This plugin turns the header icon into a real
 mode switcher that works on a conversation that has already started.
 
-## 当前自用版：26.11.10-lhg
+## 当前自用版：26.11.12-lhg
 
-明确支持 **DSH 0.2.2-rc.1**，并保留 **0.2.1-rc.5** 兼容。
+明确支持 **DSH 0.2.2-rc.2、0.2.2-rc.1**，并保留 **0.2.1-rc.5** 兼容。
+修复切换接口缺少鉴权的问题：复用宿主现有登录和来源检查，未登录或跨站请求不能切换会话。
 新版使用 `agents.turnBoundaryOf(session).openTurnStartSeq` 判断运行状态；
 rc.5 使用 `session.snapshotEvents()`，更旧的事件数组仅作兼容回退。
 状态未知或读取失败时拒绝切换。请先停止当前任务，等停止完成后手动切换，再发送继续消息。
 保留运行中禁用、同会话串行队列与清理、body portal 和用户已有交互。
 
-验证：两套真实发布包各通过 88 项检查（37 host、8 队列、6 SlotCore、15 客户端、
-14 真实 Session/AgentRegistry/预设与下一轮工具装配、8 React DOM）。
-已通过官方 rc.1 CLI 隔离 Web profile 安装和配置装配。手写 JS，无编译步骤或现有 Actions 工作流。
-DOM 使用明确几何数据，不等于桌面可视化验收；当前环境禁止 Chromium 创建本地 socket，未测试用户桌面或付费模型。
+验证：rc.5、rc.1 发布包及 rc.2 官方源码构建组件各通过 82 项服务与行为检查，另有 8 项 React DOM 检查。
+rc.2 隔离 Web 宿主通过实际安装、HTTP 鉴权、客户端加载，并在开启沙箱的 Chromium 中验证切换、取消、关闭、视口定位和历史保留。
+rc.2 npm 包本轮尚未提供，使用官方 tag `ddac9676` 构建；没有测试用户 Windows/macOS Desktop 或付费模型。
+手写 JS，无编译步骤或现有 Actions 工作流。详情见维护记录。
 
 测试时准备与目标版本匹配的官方依赖及 React 18/jsdom，使用现有 `node_modules`，
 或 `DSH_NODE_MODULES=/path/to/node_modules npm test`；DOM 运行

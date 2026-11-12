@@ -9,6 +9,7 @@ let registered;
 let recompose = async (_ctx, id) => ({ id });
 const session = { header: { origin: 'root' }, events: [], append() {} };
 const ctx = {
+  connection: { requestRejection: () => undefined },
   webServer: { register(route) { registered = route; return () => {}; } },
   agents: { get() { return { ctx: {}, session }; } },
   get() { return { recompose: (...args) => recompose(...args) }; },

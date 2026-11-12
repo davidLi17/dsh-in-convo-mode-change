@@ -52,6 +52,7 @@ try {
   await registry.mount(agent.ctx, 'standard');
   let route;
   const cleanup = apply({
+    connection: { requestRejection: () => undefined },
     webServer: { register(value) { route = value; return () => {}; } },
     agents: { get(id) { return id === session.id ? agent : undefined; },
       ...(typeof ctx.agents.turnBoundaryOf === 'function'

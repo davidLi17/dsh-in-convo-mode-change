@@ -1,5 +1,40 @@
 # Maintenance record
 
+## 26.11.12-lhg (Asia/Shanghai 2026-11-12)
+
+- Local security fix, not an upstream merge. Upstream remains
+  `238fa0899ec80194c13d64eaf245a168e5182f82`; fork base
+  `c39ec358b20cc65fc888401e85db733a6e9f8359`. Original MIT license retained.
+- Custom `webServer.register` handlers do not automatically authenticate.
+  Require the existing `connection` service and call `requestRejection` before
+  reading the request body or looking up a session. Reject unauthenticated and
+  foreign-origin requests with 403. No new permissions, credential handling,
+  account settings, or host modifications. The old endpoint reached body
+  validation without credentials (400); the fix rejects that request (403).
+- Official host: prerelease `dsh-v0.2.2-rc.2`,
+  `ddac96760b6edf8fa0fe17cbdcf0b512f4c12b2c`:
+  https://github.com/deepseek-ai/deepseek-harness/releases/tag/dsh-v0.2.2-rc.2
+  Compared with rc.1 `66491b05e3f05ad35bcdd4f6cd7ed26041d9e3db`.
+  Session single append, turnBoundaryOf, registry recompose, projection values,
+  header action slots and shared React remain applicable. This plugin uses its
+  own body portal/fixed positioning, not the changed floating-position API.
+- rc.5 and rc.1 npm components and rc.2 official-source compiled components:
+  39 host + 8 queue + 6 SlotCore + 15 client + 14 real Session/Registry checks
+  pass per host; 8 React DOM checks pass. No new compilation step is needed.
+- The packed candidate was installed by the source-built rc.2 official CLI in
+  an isolated Web profile without ignoring install scripts. Real authenticated
+  HTTP route and client delivery checks pass, including unauthenticated and
+  foreign-origin rejection, method validation and missing-session behavior.
+- Sandboxed Playwright Chromium 141 was installed normally and used on the
+  real rc.2 Web host: standard -> ptc -> standard, cancel without switching,
+  Escape close, body portal, viewport resize/clamping and unchanged history
+  pass. The fixture turn ends with MISSING_CREDENTIAL because no model/account
+  is configured; no paid model call or user data is involved. Running-turn
+  refusal and queue cleanup are covered by real-service integration tests.
+- rc.2 npm packages were not available during the run, so this is source-built
+  official host validation, not npm rc.2 installation or Windows/macOS Desktop
+  validation. No package upload, npm publication or workflow changes.
+
 ## 26.11.10-lhg (2026-11-10 UTC)
 
 - Fork base: `0e7c92fe689c2f45b589a2ef365c19119ab465b7`.

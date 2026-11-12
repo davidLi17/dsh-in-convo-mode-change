@@ -43,6 +43,7 @@ function makeSession(events, origin = "root") {
 function makeCtx({ session, presets, agent = undefined }) {
   const fakePresets = presets ?? new FakePresets();
   return {
+    connection: { requestRejection: () => undefined },
     webServer: {
       registered: undefined,
       register(route) {
@@ -107,7 +108,17 @@ async function callHandler(route, req, res) {
 
 // ---------- plugin shape ----------
 check("plugin name", name === "dsh-in-convo-mode-change");
-check("plugin injects host services", inject.join(",") === "webServer,agentPresets,agents");
+check("plugin injects host services", inject.join(",") === "webServer,connection,agentPresets,agents");
+
+// Authentication must precede body parsing and all session access.
+for (const rejection of [401, 403]) {
+  const ctx = makeCtx({ session: makeSession([]) });
+  ctx.connection.requestRejection = () => rejection;
+  ctx.agents.get = () => { throw new Error('unauthorized session lookup'); };
+  apply(ctx);
+  const out = await callHandler(ctx.webServer.registered, { method: 'POST', on() { throw new Error('unauthorized body read'); } }, makeRes());
+  check(`host rejection ${rejection} refuses before body/session access`, out.status === 403);
+}
 
 // The host-owned projection is authoritative, including sequence zero.
 for (const [boundary, expected] of [[{openTurnStartSeq: 0},409],[{openTurnStartSeq: 7},409],[{openTurnStartSeq: null},200],[undefined,409]]) {
